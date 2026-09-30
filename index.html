@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Playground</title>
+
+  <style>
+    :root {
+      --bg: #0b1020;
+      --card: #161d33;
+      --text: #e5e9f5;
+      --muted: #8b95b5;
+      --accent: #a78bfa;
+      --accent2: #34d399;
+      --bad: #f87171;
+    }
+    /* Light theme (toggled by button) */
+    body.light {
+      --bg: #f3f4f9;
+      --card: #ffffff;
+      --text: #1e2238;
+      --muted: #5b6382;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      transition: background 0.3s, color 0.3s;
+    }
+
+    /* ===== Header ===== */
+    header {
+      text-align: center;
+      padding: 60px 20px 40px;
+      background: linear-gradient(135deg, #5b21b6, #0e7490);
+      color: white;
+    }
+    header h1 { margin: 0; font-size: 2.5rem; }
+    header p { margin: 8px 0 0; opacity: 0.9; }
+    #typing { color: #fde68a; font-family: monospace; }
+
+    /* ===== Nav ===== */
+    nav {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
+      gap: 6px; padding: 10px;
+      background: var(--card);
+      border-bottom: 2px solid var(--accent);
+    }
+    nav a {
+      color: var(--text); text-decoration: none;
+      padding: 6px 14px; border-radius: 20px;
+    }
+    nav a:hover { background: var(--accent); color: white; }
+
+    main { max-width: 950px; margin: 0 auto; padding: 20px; }
+
+    section {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 26px;
+      margin: 24px 0;
+      border-top: 4px solid var(--accent);
+    }
+    section h2 { margin-top: 0; color: var(--accent); }
+
+    button {
+      padding: 9px 18px;
+      border: none; border-radius: 8px;
+      background: var(--accent); color: white;
+      font-size: 1rem; cursor: pointer;
+    }
+    button:hover { opacity: 0.85; }
+    button.green { background: var(--accent2); color: #052e22; font-weight: bold; }
+    button.grey { background: #64748b; }
+
+    /* ===== Editor ===== */
+    .editor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    @media (max-width: 700px) { .editor-grid { grid-template-columns: 1fr; } }
+
+    textarea {
+      width: 100%; height: 300px;
+      padding: 12px;
+      background: #0b1020; color: #a7f3d0;
+      border: 1px solid #334155; border-radius: 10px;
+      font-family: Consolas, monospace; font-size: 0.95rem;
+      resize: vertical;
+    }
+    iframe {
+      width: 100%; height: 300px;
+      background: white;
+      border: 1px solid #334155; border-radius: 10px;
+    }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 8px; }
+
+    /* ===== Quiz ===== */
+    .option {
+      display: block; width: 100%;
+      text-align: left;
+      margin: 8px 0;
+      background: transparent;
+      color: var(--text);
+      border: 2px solid var(--muted);
+    }
+    .option:hover { border-color: var(--accent); }
+    .option.correct { border-color: var(--accent2); background: rgba(52,211,153,0.15); }
+    .option.wrong { border-color: var(--bad); background: rgba(248,113,113,0.15); }
+    #score { color: var(--accent2); font-weight: bold; }
+
+    /* ===== Tip box ===== */
+    #tipBox {
+      margin-top: 14px; padding: 16px;
+      border-radius: 10px;
+      background: rgba(167,139,250,0.15);
+      font-size: 1.1rem;
+    }
+
+    footer { text-align: center; padding: 30px; color: var(--muted); }
+  </style>
+</head>
+
+<body>
+
+  <header id="home">
+    <h1>💻 Code Playground</h1>
+    <p>Learn by doing — <span id="typing"></span></p>
+  </header>
+
+  <nav>
+    <a href="#editor">Editor</a>
+    <a href="#quiz">Quiz</a>
+    <a href="#tips">Tips</a>
+    <button id="themeBtn" class="grey">🌙 / ☀️ Theme</button>
+  </nav>
+
+  <main>
+
+    <!-- 1. LIVE CODE EDITOR -->
+    <section id="editor">
+      <h2>Live HTML Editor</h2>
+      <p>Write HTML (and CSS / JS) on the left and click <strong>Run</strong> to see the result on the right.</p>
+
+      <div class="toolbar">
+        <button class="green" id="runBtn">▶ Run</button>
+        <button id="ex1">Example: Heading</button>
+        <button id="ex2">Example: Button</button>
+        <button id="ex3">Example: Card</button>
+        <button class="grey" id="clearBtn">Clear</button>
+      </div>
+
+      <div class="editor-grid">
+        <textarea id="code" spellcheck="false"></textarea>
+        <iframe id="preview" title="Preview"></iframe>
+      </div>
+    </section>
+
+    <!-- 2. QUIZ -->
+    <section id="quiz">
+      <h2>Mini Coding Quiz</h2>
+      <p>Question <span id="qNo">1</span> of <span id="qTotal"></span> &nbsp;|&nbsp; Score: <span id="score">0</span></p>
+      <h3 id="question"></h3>
+      <div id="options"></div>
+      <button id="nextBtn" style="display:none;">Next →</button>
+    </section>
+
+    <!-- 3. TIPS -->
+    <section id="tips">
+      <h2>Random Coding Tip</h2>
+      <button id="tipBtn">💡 Give me a tip</button>
+      <div id="tipBox">Click the button to get a tip!</div>
+    </section>
+
+  </main>
+
+  <footer>Made by Ali Ahmed &copy; 2026</footer>
+
+  <script>
+    // ===== Helper: get element by id =====
+    function $(id) { return document.getElementById(id); }
+
+    // =========================================
+    // 1. TYPING EFFECT IN HEADER
+    // =========================================
+    var words = ["HTML", "CSS", "JavaScript", "Projects"];
+    var wordIndex = 0;
+    var charIndex = 0;
+    var deleting = false;
+
+    function typeEffect() {
+      var word = words[wordIndex];
+      if (!deleting) {
+        charIndex++;
+        if (charIndex === word.length) deleting = true;
+      } else {
+        charIndex--;
+        if (charIndex === 0) {
+          deleting = false;
+          wordIndex = (wordIndex + 1) % words.length;
+        }
+      }
+      $("typing").textContent = word.substring(0, charIndex) + "|";
+      setTimeout(typeEffect, deleting ? 70 : 140);
+    }
+    typeEffect();
+
+    // =========================================
+    // 2. LIVE EDITOR
+    // =========================================
+    var examples = {
+      ex1: "<h1 style=\"color: tomato;\">Hello World!</h1>\n<p>This is my first page.</p>",
+
+      ex2: "<button onclick=\"alert('You clicked me!')\">Click Me</button>",
+
+      ex3: "<div style=\"width:220px; padding:20px; border-radius:12px;\n  background:#7c3aed; color:white; font-family:Arial;\">\n  <h2>Ali Ahmed</h2>\n  <p>Frontend Developer</p>\n</div>"
+    };
+
+    function runCode() {
+      // srcdoc puts our code inside the preview box
+      $("preview").srcdoc = $("code").value;
+    }
+
+    $("runBtn").onclick = runCode;
+    $("ex1").onclick = function () { $("code").value = examples.ex1; runCode(); };
+    $("ex2").onclick = function () { $("code").value = examples.ex2; runCode(); };
+    $("ex3").onclick = function () { $("code").value = examples.ex3; runCode(); };
+    $("clearBtn").onclick = function () { $("code").value = ""; runCode(); };
+
+    // Show example 1 when page opens
+    $("code").value = examples.ex1;
+    runCode();
+
+    // =========================================
+    // 3. QUIZ
+    // =========================================
+    var questions = [
+      {
+        q: "Which tag is used to make a link?",
+        options: ["<link>", "<a>", "<href>", "<url>"],
+        answer: 1
+      },
+      {
+        q: "Which language is used to style a webpage?",
+        options: ["HTML", "Python", "CSS", "SQL"],
+        answer: 2
+      },
+      {
+        q: "Which tag is used for the biggest heading?",
+        options: ["<h6>", "<head>", "<heading>", "<h1>"],
+        answer: 3
+      },
+      {
+        q: "Which symbol is used for an ID in CSS?",
+        options: ["#", ".", "*", "&"],
+        answer: 0
+      },
+      {
+        q: "Which one is a JavaScript way to show a message box?",
+        options: ["msg()", "alert()", "popup()", "show()"],
+        answer: 1
+      }
+    ];
+
+    var current = 0;
+    var score = 0;
+    var answered = false;
+
+    $("qTotal").textContent = questions.length;
+
+    function showQuestion() {
+      var item = questions[current];
+      answered = false;
+      $("qNo").textContent = current + 1;
+      $("question").textContent = item.q;
+      $("nextBtn").style.display = "none";
+      $("options").innerHTML = "";
+
+      for (var i = 0; i < item.options.length; i++) {
+        var btn = document.createElement("button");
+        btn.className = "option";
+        btn.textContent = item.options[i];
+        btn.dataset.index = i;
+        btn.onclick = checkAnswer;
+        $("options").appendChild(btn);
+      }
+    }
+
+    function checkAnswer(event) {
+      if (answered) return;
+      answered = true;
+
+      var chosen = Number(event.target.dataset.index);
+      var correct = questions[current].answer;
+      var buttons = $("options").children;
+
+      buttons[correct].classList.add("correct");
+      if (chosen === correct) {
+        score++;
+        $("score").textContent = score;
+      } else {
+        event.target.classList.add("wrong");
+      }
+
+      $("nextBtn").style.display = "inline-block";
+      $("nextBtn").textContent = (current === questions.length - 1) ? "See Result" : "Next →";
+    }
+
+    $("nextBtn").onclick = function () {
+      current++;
+      if (current < questions.length) {
+        showQuestion();
+      } else {
+        $("question").textContent = "🎉 Quiz finished! You scored " + score + " / " + questions.length;
+        $("options").innerHTML = "";
+        $("nextBtn").textContent = "Play Again";
+        $("nextBtn").onclick = function () { location.hash = "#quiz"; restartQuiz(); };
+      }
+    };
+
+    function restartQuiz() {
+      current = 0;
+      score = 0;
+      $("score").textContent = 0;
+      // put the normal Next behaviour back
+      $("nextBtn").onclick = function () {
+        current++;
+        if (current < questions.length) { showQuestion(); }
+        else { finishQuiz(); }
+      };
+      showQuestion();
+    }
+
+    function finishQuiz() {
+      $("question").textContent = "🎉 Quiz finished! You scored " + score + " / " + questions.length;
+      $("options").innerHTML = "";
+      $("nextBtn").textContent = "Play Again";
+      $("nextBtn").onclick = restartQuiz;
+    }
+
+    showQuestion();
+
+    // =========================================
+    // 4. RANDOM TIPS
+    // =========================================
+    var tips = [
+      "Practice a little every day — consistency beats speed.",
+      "Always indent your code so it is easy to read.",
+      "Use meaningful names like userName instead of x.",
+      "Google your errors — every developer does it!",
+      "Build small projects. They teach more than only watching videos.",
+      "Press F12 in your browser to inspect any website.",
+      "Save your projects on GitHub from day one."
+    ];
+
+    $("tipBtn").onclick = function () {
+      var random = Math.floor(Math.random() * tips.length);
+      $("tipBox").textContent = "💡 " + tips[random];
+    };
+
+    // =========================================
+    // 5. THEME TOGGLE
+    // =========================================
+    $("themeBtn").onclick = function () {
+      document.body.classList.toggle("light");
+    };
+  </script>
+
+</body>
+</html>
